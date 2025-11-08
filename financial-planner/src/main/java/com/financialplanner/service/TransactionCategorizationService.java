@@ -1,34 +1,73 @@
 package com.financialplanner.service;
 
 import com.financialplanner.model.Transaction.TransactionCategory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class TransactionCategorizationService {
 
     private final Map<Pattern, TransactionCategory> categorizationRules;
+    private final ClaudeAIService claudeAIService;
 
-    public TransactionCategorizationService() {
+    public TransactionCategorizationService(ClaudeAIService claudeAIService) {
+        this.claudeAIService = claudeAIService;
         this.categorizationRules = initializeRules();
     }
 
     /**
-     * Categorizes a transaction based on merchant name and description
+     * Categorizes a transaction using AI first, then falls back to rule-based categorization
      */
     public TransactionCategory categorize(String merchantName, String description) {
+        return categorize(merchantName, description, BigDecimal.ZERO);
+    }
+
+    /**
+     * Categorizes a transaction based on merchant name, description, and amount
+     * Uses AI when available, otherwise falls back to rule-based categorization
+     */
+    public TransactionCategory categorize(String merchantName, String description, BigDecimal amount) {
+        // Try AI categorization first
+        if (claudeAIService.isAvailable()) {
+            try {
+                String aiCategory = claudeAIService.categorizeTransaction(merchantName, description, amount);
+                if (aiCategory != null) {
+                    TransactionCategory category = TransactionCategory.valueOf(aiCategory);
+                    log.info("AI categorized '{}' as {}", merchantName, category);
+                    return category;
+                }
+            } catch (Exception e) {
+                log.warn("AI categorization failed, falling back to rule-based: {}", e.getMessage());
+            }
+        }
+
+        // Fall back to rule-based categorization
+        return categorizeByRules(merchantName, description);
+    }
+
+    /**
+     * Rule-based categorization (fallback when AI is not available)
+     */
+    private TransactionCategory categorizeByRules(String merchantName, String description) {
         String searchText = (merchantName + " " + description).toLowerCase();
 
         // Check each pattern for a match
         for (Map.Entry<Pattern, TransactionCategory> entry : categorizationRules.entrySet()) {
             if (entry.getKey().matcher(searchText).find()) {
+                log.debug("Rule-based categorization: '{}' matched as {}", merchantName, entry.getValue());
                 return entry.getValue();
             }
         }
 
+        log.debug("No rule match found for '{}', defaulting to OTHER", merchantName);
         return TransactionCategory.OTHER;
     }
 

@@ -2,7 +2,7 @@ package com.financialplanner.controller;
 
 import com.financialplanner.dto.TransactionDTO;
 import com.financialplanner.model.Transaction.TransactionCategory;
-import com.financialplanner.service.OllamaAIService;
+import com.financialplanner.service.ClaudeAIService;
 import com.financialplanner.service.TransactionAnalysisService;
 import com.financialplanner.service.TransactionService;
 import jakarta.validation.Valid;
@@ -26,7 +26,7 @@ public class TransactionController {
 
     private final TransactionService transactionService;
     private final TransactionAnalysisService analysisService;
-    private final OllamaAIService ollamaAIService;
+    private final ClaudeAIService claudeAIService;
 
     /**
      * Create a new transaction
@@ -115,21 +115,28 @@ public class TransactionController {
     @GetMapping("/ai/status")
     public ResponseEntity<Map<String, Object>> getAIStatus() {
         Map<String, Object> status = new HashMap<>();
-        boolean available = ollamaAIService.isAvailable();
+        boolean available = claudeAIService.isAvailable();
         
         status.put("available", available);
-        status.put("service", "Ollama");
-        status.put("enabled", true); // From application.properties
+        status.put("service", "Claude AI (Anthropic)");
+        status.put("provider", "Anthropic");
+        status.put("enabled", true);
         
         if (available) {
-            List<String> models = ollamaAIService.getAvailableModels();
+            List<String> models = claudeAIService.getAvailableModels();
             status.put("models", models);
-            status.put("message", "✅ AI service is running and ready!");
+            status.put("message", "✅ Claude AI is configured and ready! Real AI-powered financial insights active.");
             status.put("modelCount", models.size());
+            status.put("features", List.of(
+                "Smart transaction categorization",
+                "Personalized spending recommendations",
+                "Anomaly detection",
+                "Budget insights"
+            ));
         } else {
             status.put("models", List.of());
-            status.put("message", "❌ AI service is not available. Install Ollama and run: 'ollama serve'");
-            status.put("setupGuide", "Run setup-ollama.bat (Windows) or setup-ollama.sh (Linux/Mac)");
+            status.put("message", "❌ Claude AI is not configured. Add your API key to application.properties");
+            status.put("setupGuide", "Get your free API key at: https://console.anthropic.com/");
         }
         
         return ResponseEntity.ok(status);
@@ -145,35 +152,38 @@ public class TransactionController {
         Map<String, Object> response = new HashMap<>();
         
         String prompt = request.getOrDefault("prompt", 
-            "You are a financial advisor. Give one quick tip about saving money. Keep it under 50 words.");
+            "You are a financial advisor. Give one quick money-saving tip in under 50 words.");
         
-        log.info("Testing AI with prompt: {}", prompt);
+        log.info("Testing Claude AI with prompt: {}", prompt);
         
-        boolean available = ollamaAIService.isAvailable();
+        boolean available = claudeAIService.isAvailable();
         if (!available) {
             response.put("success", false);
-            response.put("error", "AI service is not available");
-            response.put("message", "Please start Ollama: 'ollama serve'");
+            response.put("error", "Claude AI is not configured");
+            response.put("message", "Please add your Claude API key to application.properties");
+            response.put("setupGuide", "Get your API key at: https://console.anthropic.com/");
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
         }
         
         try {
             long startTime = System.currentTimeMillis();
-            String aiResponse = ollamaAIService.generateRecommendations(prompt);
+            String aiResponse = claudeAIService.generateRecommendations(prompt);
             long duration = System.currentTimeMillis() - startTime;
             
             response.put("success", true);
             response.put("prompt", prompt);
             response.put("response", aiResponse);
             response.put("duration_ms", duration);
-            response.put("model", "llama3.2"); // Could be from config
-            response.put("message", "AI is working! This is a REAL AI-generated response.");
+            response.put("model", "claude-3-5-sonnet-20241022");
+            response.put("provider", "Anthropic Claude");
+            response.put("message", "🎉 Claude AI is working! This is a REAL AI-generated response from Claude.");
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Error testing AI: {}", e.getMessage());
+            log.error("Error testing Claude AI: {}", e.getMessage());
             response.put("success", false);
             response.put("error", e.getMessage());
+            response.put("troubleshooting", "Check your API key and internet connection");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -188,7 +198,8 @@ public class TransactionController {
         health.put("status", "UP");
         health.put("service", "Financial Planner API");
         health.put("timestamp", LocalDateTime.now().toString());
-        health.put("ai_enabled", String.valueOf(ollamaAIService.isAvailable()));
+        health.put("ai_provider", "Claude (Anthropic)");
+        health.put("ai_enabled", String.valueOf(claudeAIService.isAvailable()));
         return ResponseEntity.ok(health);
     }
 }

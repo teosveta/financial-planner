@@ -10,14 +10,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AIRecommendationEngine {
 
-    private final OllamaAIService ollamaAIService;
+    private final ClaudeAIService claudeAIService;
 
     /**
      * Generate personalized AI recommendations based on spending patterns
@@ -34,10 +33,10 @@ public class AIRecommendationEngine {
         }
 
         // Check if AI is available
-        boolean aiAvailable = ollamaAIService.isAvailable();
+        boolean aiAvailable = claudeAIService.isAvailable();
         
         if (!aiAvailable) {
-            log.warn("AI service not available, using fallback recommendations");
+            log.warn("Claude AI service not available, using fallback recommendations");
             return generateFallbackRecommendations(totalExpenses, categoryBreakdown);
         }
 
@@ -45,10 +44,10 @@ public class AIRecommendationEngine {
             // Build intelligent prompt for AI
             String prompt = buildFinancialPrompt(totalExpenses, categoryBreakdown);
             
-            log.info("Generating AI recommendations for ${} total expenses", totalExpenses);
+            log.info("Generating AI recommendations with Claude for ${} total expenses", totalExpenses);
             
-            // Get AI response
-            String aiResponse = ollamaAIService.generateRecommendations(prompt);
+            // Get AI response from Claude
+            String aiResponse = claudeAIService.generateRecommendations(prompt);
             
             // Parse AI response into recommendations
             recommendations = parseAIResponse(aiResponse);
@@ -216,7 +215,7 @@ public class AIRecommendationEngine {
             recommendations.add("💡 Pro tip: Aim for the 50/30/20 rule - 50% needs, 30% wants, 20% savings.");
         }
 
-        recommendations.add("🤖 Note: AI recommendations are currently using fallback mode. Install Ollama for personalized AI insights!");
+        recommendations.add("🤖 Note: AI recommendations are currently using fallback mode. Configure Claude API key for personalized AI insights!");
 
         return recommendations;
     }

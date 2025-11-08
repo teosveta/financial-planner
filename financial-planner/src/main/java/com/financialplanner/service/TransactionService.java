@@ -28,10 +28,11 @@ public class TransactionService {
     public TransactionDTO.Response createTransaction(TransactionDTO.Request request) {
         log.info("Creating new transaction for merchant: {}", request.getMerchantName());
 
-        // Auto-categorize the transaction
+        // Auto-categorize the transaction using AI
         TransactionCategory category = categorizationService.categorize(
                 request.getMerchantName(),
-                request.getDescription()
+                request.getDescription(),
+                request.getAmount()
         );
 
         Transaction transaction = Transaction.builder()
