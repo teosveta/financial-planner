@@ -48,7 +48,9 @@
    RESET & BASE STYLES
    ======================================== */
 
-* {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -61,6 +63,8 @@ body {
     color: var(--gray-800);
     background: var(--gray-50);
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 /* ========================================
@@ -191,6 +195,8 @@ body {
     margin-left: var(--sidebar-width);
     min-height: 100vh;
     background: var(--gray-50);
+    display: flex;
+    flex-direction: column;
 }
 
 /* ========================================
@@ -208,6 +214,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 50;
+    flex-shrink: 0;
 }
 
 .page-title h1 {
@@ -230,6 +237,10 @@ body {
     display: none;
     padding: var(--spacing);
     animation: fadeIn 0.3s ease;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    flex: 1;
 }
 
 .tab-content.active {
@@ -260,6 +271,7 @@ body {
     padding: 16px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
+    width: 100%;
 }
 
 .period-tabs {
@@ -301,6 +313,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--spacing);
     margin-bottom: var(--spacing);
+    width: 100%;
 }
 
 .stat-card {
@@ -310,6 +323,7 @@ body {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
     transition: var(--transition);
+    width: 100%;
 }
 
 .stat-card:hover {
@@ -375,6 +389,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
     gap: var(--spacing);
     margin-bottom: var(--spacing);
+    width: 100%;
 }
 
 .content-card {
@@ -383,6 +398,7 @@ body {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
     overflow: hidden;
+    width: 100%;
 }
 
 .card-header {
@@ -563,6 +579,9 @@ body {
     display: grid;
     grid-template-columns: 1fr 400px;
     gap: var(--spacing);
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .form-row {
@@ -874,9 +893,17 @@ body {
     .info-card {
         position: static;
     }
+    
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 968px) {
+    :root {
+        --sidebar-width: 0px;
+    }
+    
     .sidebar {
         transform: translateX(-100%);
     }
@@ -892,6 +919,10 @@ body {
     .stats-grid {
         grid-template-columns: 1fr;
     }
+    
+    .tab-content {
+        padding: 16px;
+    }
 }
 
 @media (max-width: 640px) {
@@ -906,6 +937,7 @@ body {
     .transaction-amount {
         grid-column: 1 / -1;
         text-align: right;
+        margin-top: 8px;
     }
     
     .btn-danger {
@@ -914,5 +946,20 @@ body {
     
     .form-actions {
         flex-direction: column;
+    }
+    
+    .period-selector-bar {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .period-tabs {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .period-tab {
+        flex: 1;
     }
 }
