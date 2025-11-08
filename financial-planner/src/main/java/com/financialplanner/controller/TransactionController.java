@@ -1,0 +1,194 @@
+package com.financialplanner.controller;
+
+import com.financialplanner.dto.TransactionDTO;
+import com.financialplanner.model.Transaction.TransactionCategory;
+import com.financialplanner.service.OllamaAIService;
+import com.financialplanner.service.TransactionAnalysisService;
+import com.financialplanner.service.TransactionService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/transactions")
+@RequiredArgsConstructor
+@Slf4j
+@CrossOrigin(origins = "*") // For development - restrict in production
+public class TransactionController {
+
+    private final TransactionService transactionService;
+    private final TransactionAnalysisService analysisService;
+    private final OllamaAIService ollamaAIService;
+
+    /**
+     * Create a new transaction
+     * POST /api/v1/transactions
+     */
+    @PostMapping
+    public ResponseEntity<TransactionDTO.Response> createTransaction(
+            @Valid @RequestBody TransactionDTO.Request request) {
+        log.info("Received request to create transaction: {}", request.getMerchantName());
+        TransactionDTO.Response response = transactionService.createTransaction(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Get all transactions
+     * GET /api/v1/transactions
+     */
+    @GetMapping
+    public ResponseEntity<List<TransactionDTO.Response>> getAllTransactions() {
+        List<TransactionDTO.Response> transactions = transactionService.getAllTransactions();
+        return ResponseEntity.ok(transactions);
+    }
+
+    /**
+     * Get transaction by ID
+     * GET /api/v1/transactions/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<TransactionDTO.Response> getTransactionById(@PathVariable Long id) {
+        TransactionDTO.Response transaction = transactionService.getTransactionById(id);
+        return ResponseEntity.ok(transaction);
+    }
+
+    /**
+     * Get transactions by category
+     * GET /api/v1/transactions/category/{category}
+     */
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<TransactionDTO.Response>> getTransactionsByCategory(
+            @PathVariable TransactionCategory category) {
+        List<TransactionDTO.Response> transactions = 
+                transactionService.getTransactionsByCategory(category);
+        return ResponseEntity.ok(transactions);
+    }
+
+    /**
+     * Delete transaction
+     * DELETE /api/v1/transactions/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
+        log.info("Received request to delete transaction: {}", id);
+        transactionService.deleteTransaction(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Get analysis report for a specific period
+     * GET /api/v1/transactions/analysis?period=monthly
+     */
+    @GetMapping("/analysis")
+    public ResponseEntity<TransactionDTO.AnalysisReport> getAnalysis(
+            @RequestParam(defaultValue = "monthly") String period) {
+        log.info("Received request for analysis report: {}", period);
+        TransactionDTO.AnalysisReport report = analysisService.analyzeTransactions(period);
+        return ResponseEntity.ok(report);
+    }
+
+    /**
+     * Get statistics for specific category
+     * GET /api/v1/transactions/stats/{category}?period=monthly
+     */
+    @GetMapping("/stats/{category}")
+    public ResponseEntity<TransactionDTO.CategoryStats> getCategoryStatistics(
+            @PathVariable TransactionCategory category,
+            @RequestParam(defaultValue = "monthly") String period) {
+        TransactionDTO.CategoryStats stats = 
+                analysisService.getCategoryStatistics(category, period);
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Check AI service status
+     * GET /api/v1/transactions/ai/status
+     */
+    @GetMapping("/ai/status")
+    public ResponseEntity<Map<String, Object>> getAIStatus() {
+        Map<String, Object> status = new HashMap<>();
+        boolean available = ollamaAIService.isAvailable();
+        
+        status.put("available", available);
+        status.put("service", "Ollama");
+        status.put("enabled", true); // From application.properties
+        
+        if (available) {
+            List<String> models = ollamaAIService.getAvailableModels();
+            status.put("models", models);
+            status.put("message", "✅ AI service is running and ready!");
+            status.put("modelCount", models.size());
+        } else {
+            status.put("models", List.of());
+            status.put("message", "❌ AI service is not available. Install Ollama and run: 'ollama serve'");
+            status.put("setupGuide", "Run setup-ollama.bat (Windows) or setup-ollama.sh (Linux/Mac)");
+        }
+        
+        return ResponseEntity.ok(status);
+    }
+
+    /**
+     * Test AI with a simple prompt
+     * POST /api/v1/transactions/ai/test
+     * Body: { "prompt": "Your test question" }
+     */
+    @PostMapping("/ai/test")
+    public ResponseEntity<Map<String, Object>> testAI(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        String prompt = request.getOrDefault("prompt", 
+            "You are a financial advisor. Give one quick tip about saving money. Keep it under 50 words.");
+        
+        log.info("Testing AI with prompt: {}", prompt);
+        
+        boolean available = ollamaAIService.isAvailable();
+        if (!available) {
+            response.put("success", false);
+            response.put("error", "AI service is not available");
+            response.put("message", "Please start Ollama: 'ollama serve'");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+        }
+        
+        try {
+            long startTime = System.currentTimeMillis();
+            String aiResponse = ollamaAIService.generateRecommendations(prompt);
+            long duration = System.currentTimeMillis() - startTime;
+            
+            response.put("success", true);
+            response.put("prompt", prompt);
+            response.put("response", aiResponse);
+            response.put("duration_ms", duration);
+            response.put("model", "llama3.2"); // Could be from config
+            response.put("message", "AI is working! This is a REAL AI-generated response.");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error testing AI: {}", e.getMessage());
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Health check endpoint
+     * GET /api/v1/transactions/health
+     */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> healthCheck() {
+        Map<String, String> health = new HashMap<>();
+        health.put("status", "UP");
+        health.put("service", "Financial Planner API");
+        health.put("timestamp", LocalDateTime.now().toString());
+        health.put("ai_enabled", String.valueOf(ollamaAIService.isAvailable()));
+        return ResponseEntity.ok(health);
+    }
+}
