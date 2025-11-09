@@ -1,26 +1,26 @@
-# 💰 Financial Planner - AI-Powered Budget Tracker
+# 💰 Financial Planner - Claude AI-Powered Budget Tracker
 
-A production-ready personal finance management application built with **Spring Boot 3.5** and vanilla JavaScript. Features automatic transaction categorization and AI-powered savings recommendations.
+A production-ready personal finance management application built with **Spring Boot 3.5** and vanilla JavaScript. Features **Claude AI by Anthropic** for intelligent transaction categorization and personalized financial recommendations.
 
 ## 🚀 Features
 
 ### Backend (Spring Boot)
 - **📥 JSON Import**: Batch import transactions from JSON files with automatic analysis
-- **Automatic Transaction Categorization**: Rule-based system categorizes expenses into 8 categories
-- **🤖 REAL AI Integration**: Powered by Ollama with Llama 3.2, Mistral, Phi-3, or other models
-- **AI Recommendation Engine**: Generates truly personalized savings advice using local LLMs
-- **Statistical Analysis**: Weekly, monthly, and yearly expense breakdowns
-- **RESTful API**: Clean, documented endpoints following REST best practices
-- **Production-Ready**: Exception handling, validation, logging, and database transactions
-- **Webhook Support**: Integration with Digital Wallet microservice
+- **🤖 Claude AI Categorization**: Intelligent transaction categorization powered by Claude 3.5 Sonnet
+- **💡 AI Recommendation Engine**: Expert financial advice from one of the world's most advanced AI models
+- **📊 Statistical Analysis**: Weekly, monthly, and yearly expense breakdowns
+- **🎯 RESTful API**: Clean, documented endpoints following REST best practices
+- **✨ Production-Ready**: Exception handling, validation, logging, and database transactions
+- **🔗 Webhook Support**: Integration with Digital Wallet microservice
 
-### AI Capabilities
-- **Local AI Models**: Run Llama 3.2, Mistral 7B, Phi-3, or other models via Ollama
-- **Intelligent Prompts**: Structured financial data sent to AI for analysis
-- **Real-time Insights**: AI analyzes spending patterns and provides actionable advice
-- **Privacy-First**: All AI processing happens locally on your machine
-- **Fallback Mechanism**: Graceful degradation when AI is unavailable
-- **Multiple Models**: Easily switch between different AI models
+### 🤖 Claude AI Capabilities
+- **Smart Transaction Categorization**: AI-powered classification of expenses (Food, Travel, Bills, etc.)
+- **Personalized Recommendations**: Context-aware financial advice based on spending patterns
+- **Real-time Insights**: Instant analysis of budget trends and anomalies
+- **Budget Optimization**: Specific savings strategies with dollar amounts
+- **Industry Benchmarking**: Compare spending against financial best practices
+- **Natural Language Understanding**: Processes merchant names and descriptions intelligently
+- **Fallback System**: Graceful degradation to rule-based categorization when AI is unavailable
 
 ### Frontend (HTML/CSS/JavaScript)
 - **Interactive Dashboard**: Real-time spending visualization with Chart.js
@@ -44,47 +44,46 @@ A production-ready personal finance management application built with **Spring B
 - **Java 21** or higher
 - **Maven 3.9+**
 - Modern web browser (Chrome, Firefox, Safari, Edge)
-- **Ollama** (Optional - for AI features)
-  - Download: https://ollama.com
-  - See [AI_INTEGRATION_GUIDE.md](AI_INTEGRATION_GUIDE.md) for setup
+- **Claude API Key** (Required for AI features)
+  - Get yours free at: https://console.anthropic.com/
 
-## 🤖 AI Setup (5 Minutes - Required for Real AI)
+## 🤖 Claude AI Setup (2 Minutes)
 
 ### ⚡ Quick Start
 
-**Windows:**
-```cmd
-cd financial-planner
-setup-ollama.bat
+1. **Get Your Claude API Key**
+   - Visit https://console.anthropic.com/
+   - Sign up/login with your account
+   - Navigate to API Keys section
+   - Create a new API key
+
+2. **Configure the Application**
+
+Edit `src/main/resources/application.properties`:
+
+```properties
+# Add your Claude API key here
+ai.claude.api-key=your-api-key-here
+ai.claude.model=claude-3-5-sonnet-20241022
 ```
 
-**Mac/Linux:**
+3. **Start the Application**
+
 ```bash
-cd financial-planner
-chmod +x setup-ollama.sh
-./setup-ollama.sh
+./mvnw spring-boot:run
 ```
 
-The setup script will:
-- ✅ Check if Ollama is installed
-- ✅ Start Ollama service
-- ✅ Download AI model (llama3.2)
-- ✅ Test AI integration
-- ✅ Verify everything works
+That's it! Claude AI is now integrated. 🎉
 
-### 📖 Detailed Guides
+### 🔍 Verify AI is Working
 
-- **Quick Start (5 min)**: [QUICK_AI_START.md](QUICK_AI_START.md) ⚡
-- **Full Setup Guide**: [AI_SETUP_GUIDE.md](AI_SETUP_GUIDE.md) 📚
+Open the app at http://localhost:8081 and look for:
 
-### 🔍 How to Know if AI is Working
+- **✅ Claude AI Active** → Big blue banner showing AI is running
+- **🤖 Smart Recommendations** → AI-generated financial insights in real-time
+- **🎯 Auto-Categorization** → Transactions categorized by Claude AI
 
-Open the app at http://localhost:8080 and look at the **"AI Insights"** section:
-
-- **✅ Real AI Active** → AI is generating personalized recommendations!
-- **⚠️ Fallback Mode** → Using rule-based recommendations (run setup script)
-
-**Without Ollama**: App works with intelligent fallback recommendations, but you'll miss the real AI magic! 🪄
+**Without API Key**: App works with intelligent rule-based fallback, but you'll miss Claude's expert financial insights! 💡
 
 ## 🛠️ Installation & Setup
 
@@ -111,13 +110,14 @@ mvnw.cmd spring-boot:run
 ### 4. Access the Application
 Open your browser and navigate to:
 ```
-http://localhost:8080
+http://localhost:8081
 ```
 
 The application will automatically:
 - Initialize the H2 in-memory database
 - Create sample transactions for testing
-- Start the web server on port 8080
+- Start the web server on port 8081
+- Connect to Claude AI (if API key is configured)
 
 ## 📥 JSON Import (New!)
 
@@ -143,8 +143,8 @@ curl -X POST http://localhost:8080/api/v1/import/file \
 
 ### Base URL
 ```
-http://localhost:8080/api/v1/transactions
-http://localhost:8080/api/v1/import
+http://localhost:8081/api/v1/transactions
+http://localhost:8081/api/v1/import
 ```
 
 ### Transaction Endpoints
@@ -309,22 +309,32 @@ financial-planner/
 ✅ **Configuration Management** - Externalized in `application.properties`
 ✅ **RESTful API Design** - Proper HTTP methods and status codes
 
-## 🧠 AI Recommendation Logic
+## 🧠 Claude AI Recommendation System
 
-The recommendation engine analyzes spending patterns and compares them to industry averages:
+The application uses a **two-tier AI system** for maximum reliability:
 
-- **Food**: Average 30%, alerts if >35%
-- **Transport**: Average 15%, alerts if >20%
-- **Bills**: Average 25%, alerts if >30%
-- **Entertainment**: Average 10%, alerts if >15%
-- **Shopping**: Average 15%, alerts if >20%
-- **Health**: Average 5%, alerts if <3% or >10%
+### 🤖 Primary: Claude AI (Anthropic)
+When configured, Claude 3.5 Sonnet provides:
+- **Deep Financial Analysis**: Context-aware spending insights
+- **Behavioral Psychology**: Actionable advice based on behavioral finance
+- **Personalized Strategies**: Specific dollar amounts and realistic goals
+- **Industry Benchmarking**: Comparison against financial best practices
+- **Natural Language**: Conversational, easy-to-understand recommendations
 
-Recommendations include:
-- Percentage comparisons to averages
+### 🔄 Fallback: Rule-Based Engine
+If Claude is unavailable, intelligent rules activate:
+- **Food**: 25-30% benchmark
+- **Transport**: 12-18% benchmark
+- **Bills**: 20-25% benchmark
+- **Entertainment**: 8-12% benchmark
+- **Shopping**: 10-15% benchmark
+- **Health**: 5-10% benchmark
+
+Both systems provide:
+- Percentage comparisons to benchmarks
 - Specific savings strategies per category
-- Calculated potential monthly savings (20% reduction target)
-- General financial wellness tips
+- Calculated monthly savings potential (15-25% reduction)
+- Positive reinforcement for good habits
 
 ## 🎨 Frontend Features
 

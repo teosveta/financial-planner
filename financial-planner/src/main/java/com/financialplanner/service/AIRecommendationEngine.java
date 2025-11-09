@@ -67,52 +67,59 @@ public class AIRecommendationEngine {
     }
 
     /**
-     * Build an intelligent prompt for the AI model
+     * Build an intelligent prompt for Claude AI with enhanced financial analysis capabilities
      */
     private String buildFinancialPrompt(BigDecimal totalExpenses, List<TransactionDTO.CategoryStats> categoryBreakdown) {
         StringBuilder prompt = new StringBuilder();
         
-        prompt.append("You are a financial advisor AI. Analyze this spending data and provide 3-5 specific, actionable recommendations.\n\n");
-        prompt.append("SPENDING SUMMARY:\n");
-        prompt.append("Total Expenses: $").append(totalExpenses.setScale(2, RoundingMode.HALF_UP)).append("\n\n");
+        prompt.append("You are Claude, an expert financial advisor AI powered by Anthropic. Analyze this spending data with deep financial insights.\n\n");
         
-        prompt.append("CATEGORY BREAKDOWN:\n");
+        prompt.append("📊 SPENDING SUMMARY:\n");
+        prompt.append("Total Monthly Expenses: $").append(totalExpenses.setScale(2, RoundingMode.HALF_UP)).append("\n\n");
+        
+        prompt.append("📈 DETAILED CATEGORY BREAKDOWN:\n");
         for (TransactionDTO.CategoryStats stats : categoryBreakdown) {
-            prompt.append(String.format("- %s: $%.2f (%.1f%%, %d transactions)\n",
+            prompt.append(String.format("• %s: $%.2f (%.1f%% of budget, %d transactions, avg $%.2f per transaction)\n",
                     stats.getCategoryDisplayName(),
                     stats.getTotalAmount(),
                     stats.getPercentage(),
-                    stats.getTransactionCount()));
+                    stats.getTransactionCount(),
+                    stats.getTransactionCount() > 0 ? stats.getTotalAmount().doubleValue() / stats.getTransactionCount() : 0));
         }
         
-        prompt.append("\nINDUSTRY AVERAGES (for comparison):\n");
-        prompt.append("- Food: 30%\n");
-        prompt.append("- Transport: 15%\n");
-        prompt.append("- Bills: 25%\n");
-        prompt.append("- Entertainment: 10%\n");
-        prompt.append("- Shopping: 15%\n");
-        prompt.append("- Health: 5%\n");
+        prompt.append("\n🎯 INDUSTRY BENCHMARKS (for comparison):\n");
+        prompt.append("• Food & Dining: 25-30% (healthy range)\n");
+        prompt.append("• Transportation: 12-18%\n");
+        prompt.append("• Bills & Utilities: 20-25%\n");
+        prompt.append("• Entertainment: 8-12%\n");
+        prompt.append("• Shopping: 10-15%\n");
+        prompt.append("• Health & Wellness: 5-10%\n");
+        prompt.append("• Travel: 5-10%\n\n");
         
-        prompt.append("\nPROVIDE:\n");
-        prompt.append("1. Identify categories where spending is significantly above industry average\n");
-        prompt.append("2. Calculate potential monthly savings (suggest 15-20% reduction where overspending)\n");
-        prompt.append("3. Give specific, actionable advice (e.g., 'meal prep 3 days/week' not 'reduce food spending')\n");
-        prompt.append("4. Mention positive patterns if spending is well-balanced\n");
-        prompt.append("5. Prioritize the biggest savings opportunities\n\n");
+        prompt.append("💡 YOUR ANALYSIS SHOULD:\n");
+        prompt.append("1. Identify spending patterns and anomalies compared to industry benchmarks\n");
+        prompt.append("2. Calculate realistic monthly savings (15-25% reduction in overspending categories)\n");
+        prompt.append("3. Provide SPECIFIC, ACTIONABLE strategies (not generic advice)\n");
+        prompt.append("4. Acknowledge positive financial habits\n");
+        prompt.append("5. Prioritize high-impact savings opportunities\n");
+        prompt.append("6. Consider behavioral psychology in your recommendations\n");
+        prompt.append("7. Suggest automation or tools where applicable\n\n");
         
-        prompt.append("FORMAT YOUR RESPONSE AS:\n");
-        prompt.append("- Start each recommendation with an emoji (🍔 💰 💡 ✨ 🎯)\n");
-        prompt.append("- One recommendation per line\n");
-        prompt.append("- Be specific with dollar amounts\n");
-        prompt.append("- Keep each recommendation under 150 characters\n");
-        prompt.append("- Focus on practical, immediate actions\n\n");
+        prompt.append("✨ FORMAT REQUIREMENTS:\n");
+        prompt.append("- Provide exactly 4-6 recommendations\n");
+        prompt.append("- Start each with a relevant emoji (🍔 💰 💡 ✨ 🎯 🚀 ⚡ 📱)\n");
+        prompt.append("- Include specific dollar amounts and percentages\n");
+        prompt.append("- Be conversational yet professional\n");
+        prompt.append("- Each recommendation: 1-2 sentences, under 160 characters\n");
+        prompt.append("- Focus on immediate, practical actions\n\n");
         
-        prompt.append("EXAMPLE OUTPUT:\n");
-        prompt.append("🍔 Your food spending is $450/month (40% of budget). Try meal prepping 3x/week to save $90/month.\n");
-        prompt.append("💰 Entertainment at $150 is reasonable. Consider free alternatives 1x/month for $15 savings.\n");
-        prompt.append("✨ Great job keeping health expenses at 4% - that's below average and sustainable!\n\n");
+        prompt.append("📝 EXAMPLE RESPONSES:\n");
+        prompt.append("🍔 Food spending at $520/month (38%) is high. Meal prep Sundays + Thursday could save $120-150/month.\n");
+        prompt.append("💡 Utilities at $180 (12%) are excellent! Consider smart plugs to save another $15-20/month.\n");
+        prompt.append("🎯 Entertainment $85 (6%) is well-managed. This is sustainable long-term - great job!\n");
+        prompt.append("🚀 Transport $240 (17%) is above average. Try carpooling 2 days/week for $60 monthly savings.\n\n");
         
-        prompt.append("NOW ANALYZE THE DATA ABOVE AND PROVIDE YOUR RECOMMENDATIONS:\n");
+        prompt.append("🤖 NOW ANALYZE THE USER'S DATA AND PROVIDE YOUR EXPERT CLAUDE AI RECOMMENDATIONS:\n");
         
         return prompt.toString();
     }

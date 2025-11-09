@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -189,6 +190,121 @@ public class TransactionController {
     }
 
     /**
+     * Get smart spending insights
+     * GET /api/v1/transactions/ai/insights?period=monthly
+     */
+    @GetMapping("/ai/insights")
+    public ResponseEntity<Map<String, Object>> getSpendingInsights(
+            @RequestParam(defaultValue = "monthly") String period) {
+        Map<String, Object> insights = new HashMap<>();
+        
+        try {
+            TransactionDTO.AnalysisReport report = analysisService.analyzeTransactions(period);
+            
+            // Prepare category spending map for AI
+            Map<String, BigDecimal> categorySpending = new HashMap<>();
+            for (TransactionDTO.CategoryStats stats : report.getCategoryBreakdown()) {
+                categorySpending.put(stats.getCategoryDisplayName(), stats.getTotalAmount());
+            }
+            
+            // Get AI-powered insight
+            String aiInsight = claudeAIService.generateSpendingInsight(
+                period, 
+                categorySpending, 
+                report.getTotalExpenses()
+            );
+            
+            insights.put("success", true);
+            insights.put("period", period);
+            insights.put("insight", aiInsight);
+            insights.put("totalExpenses", report.getTotalExpenses());
+            insights.put("aiPowered", claudeAIService.isAvailable());
+            
+            return ResponseEntity.ok(insights);
+        } catch (Exception e) {
+            log.error("Error generating insights: {}", e.getMessage());
+            insights.put("success", false);
+            insights.put("error", "Failed to generate insights");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(insights);
+        }
+    }
+
+    /**
+     * Predict category for a transaction before saving
+     * POST /api/v1/transactions/ai/predict-category
+     * Body: { "merchantName": "Starbucks", "description": "Coffee", "amount": 5.99 }
+     */
+    @PostMapping("/ai/predict-category")
+    public ResponseEntity<Map<String, Object>> predictCategory(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        String merchantName = (String) request.get("merchantName");
+        String description = (String) request.getOrDefault("description", "");
+        Double amount = request.containsKey("amount") ? 
+            Double.parseDouble(request.get("amount").toString()) : 0.0;
+        
+        boolean aiAvailable = claudeAIService.isAvailable();
+        String predictedCategory = null;
+        
+        if (aiAvailable) {
+            try {
+                predictedCategory = claudeAIService.categorizeTransaction(
+                    merchantName, 
+                    description, 
+                    BigDecimal.valueOf(amount)
+                );
+            } catch (Exception e) {
+                log.error("AI categorization failed: {}", e.getMessage());
+            }
+        }
+        
+        response.put("merchantName", merchantName);
+        response.put("predictedCategory", predictedCategory);
+        response.put("aiPowered", predictedCategory != null);
+        response.put("confidence", predictedCategory != null ? "high" : "rule-based");
+        response.put("message", predictedCategory != null ? 
+            "Category predicted by Claude AI" : 
+            "AI not available, will use rule-based categorization");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get personalized financial tips
+     * GET /api/v1/transactions/ai/tips
+     */
+    @GetMapping("/ai/tips")
+    public ResponseEntity<Map<String, Object>> getFinancialTips() {
+        Map<String, Object> response = new HashMap<>();
+        
+        if (!claudeAIService.isAvailable()) {
+            response.put("success", false);
+            response.put("message", "Claude AI not configured");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+        }
+        
+        try {
+            String prompt = "As a financial advisor AI, provide 3 quick, actionable money management tips " +
+                          "for someone looking to improve their financial health. Keep each tip under 100 words. " +
+                          "Format as numbered list with emojis.";
+            
+            String tips = claudeAIService.generateRecommendations(prompt);
+            
+            response.put("success", true);
+            response.put("tips", tips);
+            response.put("provider", "Claude AI (Anthropic)");
+            response.put("timestamp", LocalDateTime.now().toString());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error generating tips: {}", e.getMessage());
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
      * Health check endpoint
      * GET /api/v1/transactions/health
      */
@@ -196,10 +312,11 @@ public class TransactionController {
     public ResponseEntity<Map<String, String>> healthCheck() {
         Map<String, String> health = new HashMap<>();
         health.put("status", "UP");
-        health.put("service", "Financial Planner API");
+        health.put("service", "Financial Planner API with Claude AI");
         health.put("timestamp", LocalDateTime.now().toString());
-        health.put("ai_provider", "Claude (Anthropic)");
+        health.put("ai_provider", "Claude by Anthropic");
         health.put("ai_enabled", String.valueOf(claudeAIService.isAvailable()));
+        health.put("ai_model", "claude-3-5-sonnet-20241022");
         return ResponseEntity.ok(health);
     }
 }
