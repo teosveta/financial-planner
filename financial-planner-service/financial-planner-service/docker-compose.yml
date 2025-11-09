@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  financial-planner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: financial-planner-service
+    ports:
+      - "8081:8081"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SPRING_PROFILES_ACTIVE=prod
+      - TRANSACTIONS_FILE_PATH=/data/transactions.json
+      - WALLET_SERVICE_URL=http://wallet-service:8080
+    volumes:
+      - ./data:/data
+      - ./logs:/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/financial-planner/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - hackcash-network
+
+networks:
+  hackcash-network:
+    driver: bridge

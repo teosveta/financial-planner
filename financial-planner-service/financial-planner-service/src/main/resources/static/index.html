@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Planner - Hack-Cash</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light-gray: #f1f5f9;
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .control-panel h2 {
+            color: var(--dark);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: var(--white);
+            color: var(--dark);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+
+        .loading i {
+            font-size: 3rem;
+            color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading h3 {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .loading p {
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .summary-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .summary-card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .summary-card-icon.spent {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .summary-card-icon.income {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .summary-card-icon.savings {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .summary-card-icon.transactions {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--secondary);
+        }
+
+        .summary-card-title {
+            font-size: 0.875rem;
+            color: var(--gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card-amount {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1;
+        }
+
+        .summary-card-subtitle {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-card h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+
+        /* Recommendations */
+        .recommendations-section {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .recommendations-section h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendation {
+            background: var(--light-gray);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .recommendation:hover {
+            box-shadow: var(--shadow);
+            transform: translateX(5px);
+        }
+
+        .recommendation.high {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .recommendation.medium {
+            border-left-color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .recommendation.low {
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-badge.high {
+            background: var(--danger);
+            color: white;
+        }
+
+        .priority-badge.medium {
+            background: var(--warning);
+            color: white;
+        }
+
+        .priority-badge.low {
+            background: var(--success);
+            color: white;
+        }
+
+        .recommendation h4 {
+            color: var(--dark);
+            font-size: 1.125rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .recommendation p {
+            color: var(--gray);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .savings-amount {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--success);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* Insights */
+        .insights-section {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .insights-section h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .insight {
+            background: var(--light-gray);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .insight:hover {
+            box-shadow: var(--shadow);
+            transform: translateY(-3px);
+        }
+
+        .insight.positive {
+            background: rgba(16, 185, 129, 0.05);
+            border-left-color: var(--success);
+        }
+
+        .insight.negative {
+            background: rgba(239, 68, 68, 0.05);
+            border-left-color: var(--danger);
+        }
+
+        .insight.neutral {
+            background: var(--light-gray);
+            border-left-color: var(--gray);
+        }
+
+        .insight-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .insight.positive .insight-icon {
+            color: var(--success);
+        }
+
+        .insight.negative .insight-icon {
+            color: var(--danger);
+        }
+
+        .insight.neutral .insight-icon {
+            color: var(--gray);
+        }
+
+        .insight p {
+            color: var(--dark);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* Error State */
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .error h3 {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 40px;
+            opacity: 0.9;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Financial Planner</h1>
+            <p class="subtitle">AI-Powered Spending Analysis & Smart Recommendations</p>
+            <div class="badge">
+                <i class="fas fa-robot"></i> Powered by OpenAI GPT-4o-mini
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h2><i class="fas fa-sliders-h"></i> Analysis Settings</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label for="userIdInput">
+                        <i class="fas fa-user"></i> User ID
+                    </label>
+                    <input 
+                        type="text" 
+                        id="userIdInput" 
+                        placeholder="Enter user UUID" 
+                        value="123e4567-e89b-12d3-a456-426614174000"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="periodSelect">
+                        <i class="fas fa-calendar"></i> Time Period
+                    </label>
+                    <select id="periodSelect">
+                        <option value="week">This Week</option>
+                        <option value="month" selected>This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="loadAnalysis()">
+                    <i class="fas fa-search"></i> Analyze
+                </button>
+                <button class="btn btn-secondary" onclick="categorizeAll()">
+                    <i class="fas fa-robot"></i> Categorize
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="content">
+            <div class="control-panel loading">
+                <i class="fas fa-chart-line"></i>
+                <h3>Ready to Analyze</h3>
+                <p>Click "Analyze" to view your financial insights with AI-powered recommendations</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Built with ❤️ for Hack-Cash Hackathon • 100% AI-Powered • Zero Hardcoded Rules</p>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        async function loadAnalysis() {
+            const userId = document.getElementById('userIdInput').value;
+            const period = document.getElementById('periodSelect').value;
+            const content = document.getElementById('content');
+
+            if (!userId) {
+                content.innerHTML = `
+                    <div class="control-panel error">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Missing User ID</h3>
+                        <p>Please enter a valid User ID to continue</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = `
+                <div class="control-panel loading">
+                    <i class="fas fa-spinner"></i>
+                    <h3>Analyzing Your Finances...</h3>
+                    <p>Our AI is processing your transactions and generating personalized insights</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(
+                    `http://localhost:8081/api/v1/financial-planner/analysis/${userId}?period=${period}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayAnalysis(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                content.innerHTML = `
+                    <div class="control-panel error">
+                        <h3><i class="fas fa-exclamation-circle"></i> Error Loading Analysis</h3>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 10px;">Make sure the Financial Planner service is running on port 8081</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function categorizeAll() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="control-panel loading">
+                    <i class="fas fa-spinner"></i>
+                    <h3>AI Categorization in Progress...</h3>
+                    <p>Using OpenAI GPT-4o-mini to intelligently categorize all transactions</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(
+                    'http://localhost:8081/api/v1/financial-planner/categorize-all',
+                    { method: 'POST' }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const message = await response.text();
+                content.innerHTML = `
+                    <div class="control-panel" style="text-align: center;">
+                        <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--success); margin-bottom: 20px;"></i>
+                        <h3 style="color: var(--success); margin-bottom: 10px;">${message}</h3>
+                        <p style="color: var(--gray);">Now click "Analyze" to see the AI-powered insights!</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error:', error);
+                content.innerHTML = `
+                    <div class="control-panel error">
+                        <h3><i class="fas fa-exclamation-circle"></i> Categorization Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayAnalysis(data) {
+            const content = document.getElementById('content');
+            const summary = data.summary;
+            const categories = data.categoryBreakdown;
+            const recommendations = data.recommendations || [];
+            const insights = data.insights || [];
+
+            let html = `
+                <!-- Summary Cards -->
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-card-header">
+                            <div class="summary-card-icon spent">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div>
+                                <div class="summary-card-title">Total Spent</div>
+                            </div>
+                        </div>
+                        <div class="summary-card-amount">${summary.totalSpent.toFixed(2)} ${summary.currency}</div>
+                        <div class="summary-card-subtitle">${summary.transactionCount} transactions</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-header">
+                            <div class="summary-card-icon income">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div>
+                                <div class="summary-card-title">Total Income</div>
+                            </div>
+                        </div>
+                        <div class="summary-card-amount">${summary.totalIncome.toFixed(2)} ${summary.currency}</div>
+                        <div class="summary-card-subtitle">Earnings & deposits</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-header">
+                            <div class="summary-card-icon savings">
+                                <i class="fas fa-piggy-bank"></i>
+                            </div>
+                            <div>
+                                <div class="summary-card-title">Net Savings</div>
+                            </div>
+                        </div>
+                        <div class="summary-card-amount">${summary.netSavings.toFixed(2)} ${summary.currency}</div>
+                        <div class="summary-card-subtitle">${summary.netSavings >= 0 ? 'Positive balance' : 'Overspending'}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-header">
+                            <div class="summary-card-icon transactions">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div>
+                                <div class="summary-card-title">Avg Transaction</div>
+                            </div>
+                        </div>
+                        <div class="summary-card-amount">${summary.averageTransaction.toFixed(2)} ${summary.currency}</div>
+                        <div class="summary-card-subtitle">Per transaction</div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-card">
+                    <h2><i class="fas fa-chart-pie"></i> Spending by Category</h2>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            `;
+
+            if (recommendations.length > 0) {
+                html += `
+                    <div class="recommendations-section">
+                        <h2><i class="fas fa-lightbulb"></i> AI-Powered Recommendations</h2>
+                `;
+
+                recommendations.forEach(rec => {
+                    html += `
+                        <div class="recommendation ${rec.priority.toLowerCase()}">
+                            <div class="recommendation-header">
+                                <span class="priority-badge ${rec.priority.toLowerCase()}">${rec.priority}</span>
+                                <h4>${rec.title}</h4>
+                            </div>
+                            <p>${rec.description}</p>
+                            ${rec.potentialSavings > 0 ? 
+                                `<div class="savings-amount">
+                                    <i class="fas fa-coins"></i>
+                                    Potential Savings: ${rec.potentialSavings.toFixed(2)} ${summary.currency}
+                                </div>` 
+                                : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            }
+
+            if (insights.length > 0) {
+                html += `
+                    <div class="insights-section">
+                        <h2><i class="fas fa-brain"></i> AI Insights</h2>
+                        <div class="insights-grid">
+                `;
+
+                insights.forEach(insight => {
+                    const iconMap = {
+                        'POSITIVE': 'fa-smile',
+                        'NEGATIVE': 'fa-frown',
+                        'NEUTRAL': 'fa-meh'
+                    };
+                    html += `
+                        <div class="insight ${insight.sentiment.toLowerCase()}">
+                            <div class="insight-icon">
+                                <i class="fas ${iconMap[insight.sentiment] || 'fa-info-circle'}"></i>
+                            </div>
+                            <p>${insight.message}</p>
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            }
+
+            content.innerHTML = html;
+
+            // Create chart
+            createCategoryChart(categories, summary.currency);
+        }
+
+        function createCategoryChart(categories, currency) {
+            const ctx = document.getElementById('categoryChart');
+            
+            if (!ctx) return;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const categoryData = Object.entries(categories)
+                .filter(([key, value]) => key !== 'TRANSFER' && key !== 'INCOME')
+                .map(([key, value]) => ({
+                    category: value.category,
+                    amount: value.amount,
+                    percentage: value.percentage
+                }));
+
+            const labels = categoryData.map(d => d.category);
+            const data = categoryData.map(d => d.amount);
+            const colors = [
+                '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', 
+                '#10b981', '#06b6d4', '#ef4444', '#64748b'
+            ];
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 13,
+                                    family: "'Inter', sans-serif"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = categoryData[context.dataIndex].percentage;
+                                    return `${label}: ${value.toFixed(2)} ${currency} (${percentage.toFixed(1)}%)`;
+                                }
+                            },
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+        }
+
+        .recommendation.low {
+            border-left-color: #27ae60;
+        }
+
+        .recommendation h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .recommendation .savings {
+            color: #27ae60;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .insights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .insight {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .insight.positive {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .insight.negative {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .controls input,
+        .controls select,
+        .controls button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Financial Planner</h1>
+            <p>AI-Powered Spending Analysis & Recommendations</p>
+        </div>
+
+        <div class="card">
+            <div class="controls">
+                <input type="text" id="userIdInput" placeholder="Enter User ID" 
+                       value="123e4567-e89b-12d3-a456-426614174000">
+                <select id="periodSelect">
+                    <option value="week">This Week</option>
+                    <option value="month" selected>This Month</option>
+                    <option value="quarter">This Quarter</option>
+                    <option value="year">This Year</option>
+                </select>
+                <button onclick="loadAnalysis()">Analyze</button>
+                <button onclick="categorizeAll()">Categorize All</button>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="loading">
+                Click "Analyze" to view your financial insights
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        async function loadAnalysis() {
+            const userId = document.getElementById('userIdInput').value;
+            const period = document.getElementById('periodSelect').value;
+            const content = document.getElementById('content');
+
+            if (!userId) {
+                content.innerHTML = '<div class="error">Please enter a User ID</div>';
+                return;
+            }
+
+            content.innerHTML = '<div class="loading">Loading financial analysis...</div>';
+
+            try {
+                const response = await fetch(
+                    `http://localhost:8081/api/v1/financial-planner/analysis/${userId}?period=${period}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayAnalysis(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                content.innerHTML = `
+                    <div class="error">
+                        <h3>Error Loading Analysis</h3>
+                        <p>${error.message}</p>
+                        <p>Make sure the Financial Planner service is running on port 8081</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function categorizeAll() {
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading">Categorizing all transactions with AI...</div>';
+
+            try {
+                const response = await fetch(
+                    'http://localhost:8081/api/v1/financial-planner/categorize-all',
+                    { method: 'POST' }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const message = await response.text();
+                content.innerHTML = `
+                    <div class="card">
+                        <h3 style="color: #27ae60;">✓ ${message}</h3>
+                        <p>Now click "Analyze" to see the results!</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error:', error);
+                content.innerHTML = `
+                    <div class="error">
+                        <h3>Error During Categorization</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayAnalysis(data) {
+            const content = document.getElementById('content');
+            const summary = data.summary;
+            const categories = data.categoryBreakdown;
+            const recommendations = data.recommendations || [];
+            const insights = data.insights || [];
+
+            let html = `
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h3>Total Spent</h3>
+                        <div class="amount">${summary.totalSpent} ${summary.currency}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Total Income</h3>
+                        <div class="amount">${summary.totalIncome} ${summary.currency}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Net Savings</h3>
+                        <div class="amount">${summary.netSavings} ${summary.currency}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Transactions</h3>
+                        <div class="amount">${summary.transactionCount}</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💸 Spending by Category</h2>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            `;
+
+            if (recommendations.length > 0) {
+                html += `
+                    <div class="card recommendations">
+                        <h2>🎯 AI Recommendations</h2>
+                `;
+
+                recommendations.forEach(rec => {
+                    html += `
+                        <div class="recommendation ${rec.priority.toLowerCase()}">
+                            <h4>${rec.title}</h4>
+                            <p>${rec.description}</p>
+                            ${rec.potentialSavings > 0 ? 
+                                `<div class="savings">💰 Potential Savings: ${rec.potentialSavings} ${summary.currency}</div>` 
+                                : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            }
+
+            if (insights.length > 0) {
+                html += `
+                    <div class="card">
+                        <h2>📊 Spending Insights</h2>
+                        <div class="insights">
+                `;
+
+                insights.forEach(insight => {
+                    html += `
+                        <div class="insight ${insight.sentiment.toLowerCase()}">
+                            ${insight.message}
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            }
+
+            content.innerHTML = html;
+
+            // Create pie chart
+            createCategoryChart(categories, summary.currency);
+        }
+
+        function createCategoryChart(categories, currency) {
+            const ctx = document.getElementById('categoryChart');
+            
+            if (!ctx) return;
+
+            // Destroy previous chart if exists
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const categoryData = Object.entries(categories)
+                .filter(([key, value]) => key !== 'TRANSFER' && key !== 'INCOME')
+                .map(([key, value]) => ({
+                    category: value.category,
+                    amount: value.amount,
+                    percentage: value.percentage
+                }));
+
+            const labels = categoryData.map(d => d.category);
+            const data = categoryData.map(d => d.amount);
+            const colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0'
+            ];
+
+            chartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} ${currency} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

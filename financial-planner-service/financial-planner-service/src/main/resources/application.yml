@@ -1,0 +1,55 @@
+server:
+  port: 8081
+  
+spring:
+  application:
+    name: financial-planner-service
+  
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+# OpenAI Configuration
+openai:
+  api:
+    key: ${OPENAI_API_KEY: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}
+    model: gpt-4o-mini
+    max-tokens: 1000
+    temperature: 0.7
+    timeout-seconds: 90
+
+# Retry Configuration
+ai:
+  retry:
+    max-attempts: 3
+    backoff-multiplier-ms: 1000
+
+# Wallet Service Configuration
+wallet:
+  service:
+    url: http://localhost:8080
+    
+# Data Configuration
+data:
+  transactions:
+    file-path: ${TRANSACTIONS_FILE_PATH:./data/transactions.json}
+
+# Actuator endpoints for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.paysafe.hackcash.financialplanner: DEBUG
+    org.springframework.web: INFO
+    com.theokanning.openai: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
