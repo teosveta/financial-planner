@@ -36,7 +36,15 @@ public class ClaudeAIService {
      * Check if Claude AI service is available
      */
     public boolean isAvailable() {
-        return apiKey != null && !apiKey.isEmpty() && !apiKey.equals("your-api-key-here");
+        boolean available = apiKey != null && !apiKey.isEmpty() && !apiKey.equals("your-api-key-here");
+        if (available) {
+            log.info("Claude AI is configured with API key: {}...{}", 
+                apiKey.substring(0, Math.min(15, apiKey.length())), 
+                apiKey.substring(Math.max(0, apiKey.length() - 4)));
+        } else {
+            log.warn("Claude AI is NOT configured - API key is missing or invalid");
+        }
+        return available;
     }
 
     /**
@@ -220,7 +228,16 @@ public class ClaudeAIService {
             throw new RuntimeException("Invalid response from Claude API");
 
         } catch (Exception e) {
-            log.error("Error calling Claude API: {}", e.getMessage());
+            log.error("Error calling Claude API: {} | Details: {}", e.getMessage(), e.getClass().getName());
+            if (e.getMessage() != null) {
+                if (e.getMessage().contains("401") || e.getMessage().contains("authentication")) {
+                    log.error("Authentication failed - please verify your Claude API key");
+                } else if (e.getMessage().contains("429")) {
+                    log.error("Rate limit exceeded - too many requests to Claude API");
+                } else if (e.getMessage().contains("500") || e.getMessage().contains("503")) {
+                    log.error("Claude API server error - service may be temporarily unavailable");
+                }
+            }
             throw new RuntimeException("Failed to call Claude API: " + e.getMessage(), e);
         }
     }

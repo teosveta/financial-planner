@@ -39,9 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAIStatus();
     loadAnalysis();
     loadTransactions();
-    
-    // Show AI banner
-    updateAIBanner();
 });
 
 // Tab Navigation
@@ -233,6 +230,8 @@ function displayChart(categories) {
 
 // Check AI Status
 async function checkAIStatus() {
+    const indicator = document.getElementById('aiStatusIndicator');
+    
     try {
         const response = await fetch(`${API_BASE_URL}/ai/status`);
         if (!response.ok) throw new Error('Failed to check AI status');
@@ -244,9 +243,21 @@ async function checkAIStatus() {
             models: data.models || [],
             message: data.message
         };
-
-        updateAIStatusUI();
-        updateAIBanner();
+        
+        // Update indicator
+        if (indicator) {
+            if (data.available) {
+                indicator.textContent = '✓';
+                indicator.style.color = '#10b981';
+                indicator.style.opacity = '1';
+                indicator.title = 'AI Active';
+            } else {
+                indicator.textContent = '✗';
+                indicator.style.color = '#ef4444';
+                indicator.style.opacity = '1';
+                indicator.title = 'AI Unavailable';
+            }
+        }
     } catch (error) {
         console.error('Error checking AI status:', error);
         aiStatus = {
@@ -254,59 +265,18 @@ async function checkAIStatus() {
             lastCheck: new Date(),
             message: 'Could not check AI status'
         };
-        updateAIStatusUI();
-        updateAIBanner();
+        
+        // Update indicator to show error
+        if (indicator) {
+            indicator.textContent = '✗';
+            indicator.style.color = '#ef4444';
+            indicator.style.opacity = '1';
+            indicator.title = 'AI Unavailable';
+        }
     }
 }
 
-// Update AI Status UI
-function updateAIStatusUI() {
-    const badge = document.getElementById('aiStatusBadge');
-    const messageDiv = document.getElementById('aiStatusMessage');
-
-    if (aiStatus.available) {
-        badge.textContent = '✅ Claude AI Active';
-        badge.className = 'badge badge-success';
-        badge.style.display = 'inline-flex';
-        
-        messageDiv.innerHTML = `
-            <div style="padding: 12px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px; border-left: 4px solid #10b981; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                    <span style="font-size: 24px;">🤖</span>
-                    <strong style="color: #065f46; font-size: 1.1em;">Claude AI by Anthropic is Active!</strong>
-                </div>
-                <span style="color: #047857; font-size: 0.95em; line-height: 1.5;">
-                    ✨ Using <strong>${aiStatus.models.length > 0 ? aiStatus.models[0] : 'Claude 3.5 Sonnet'}</strong> for intelligent financial analysis<br>
-                    🎯 Smart transaction categorization & personalized recommendations<br>
-                    🚀 Real-time AI-powered insights from one of the world's most advanced language models
-                </span>
-            </div>
-        `;
-        messageDiv.style.display = 'block';
-    } else {
-        badge.textContent = '⚠️ Claude API Not Configured';
-        badge.className = 'badge badge-warning';
-        badge.style.display = 'inline-flex';
-        
-        messageDiv.innerHTML = `
-            <div style="padding: 12px; background: #fef3c7; border-radius: 12px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);">
-                <strong style="color: #92400e; display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                    <span style="font-size: 20px;">⚠️</span> 
-                    <span>Claude AI Not Available - Using Fallback Mode</span>
-                </strong>
-                <span style="color: #78350f; font-size: 0.9em; line-height: 1.6;">
-                    🔑 To enable real AI-powered insights, add your Claude API key:<br>
-                    <strong>1.</strong> Get a free API key at <a href="https://console.anthropic.com/" target="_blank" style="color: #4f46e5; text-decoration: underline;">console.anthropic.com</a><br>
-                    <strong>2.</strong> Add to <code style="background: #fbbf24; padding: 2px 8px; border-radius: 4px;">application.properties</code>:<br>
-                    <code style="background: #fbbf24; padding: 4px 8px; border-radius: 4px; margin-top: 4px; display: inline-block; font-size: 0.85em;">
-                        ai.claude.api-key=your-api-key-here
-                    </code>
-                </span>
-            </div>
-        `;
-        messageDiv.style.display = 'block';
-    }
-}
+// Update AI Status UI - removed to clean up interface
 
 // Display AI Recommendations
 function displayRecommendations(recommendations) {
@@ -317,26 +287,26 @@ function displayRecommendations(recommendations) {
         return;
     }
 
-    // Check if recommendations are fallback (contain specific fallback text)
-    const isFallback = recommendations.some(rec => 
-        rec.includes('fallback mode') || 
-        rec.includes('Install Ollama') ||
-        rec.includes('🤖 Note:')
-    );
-
     container.innerHTML = recommendations.map(rec => {
+        // Skip any fallback messages about AI configuration
+        if (rec.includes('fallback mode') || 
+            rec.includes('Install Ollama') ||
+            rec.includes('Claude API') ||
+            rec.includes('Configure Claude') ||
+            rec.includes('🤖 Note:')) {
+            return '';
+        }
+
         // Determine recommendation type for styling
         let className = 'recommendation-item';
         if (rec.includes('above average') || rec.includes('save')) {
             className += ' warning';
         } else if (rec.includes('Great job') || rec.includes('well-balanced')) {
             className += ' success';
-        } else if (rec.includes('fallback') || rec.includes('Install Ollama')) {
-            className += ' info';
         }
 
         return `<div class="${className}">${rec}</div>`;
-    }).join('');
+    }).filter(item => item !== '').join('');
 }
 
 // Display Category Table
@@ -532,61 +502,9 @@ function formatDate(dateString) {
     return date.toLocaleDateString('en-US', options);
 }
 
-// Update AI Banner (prominent status display)
-function updateAIBanner() {
-    const banner = document.getElementById('aiStatusBanner');
-    if (!banner) return;
-    
-    if (aiStatus.available) {
-        banner.innerHTML = `
-            <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); 
-                        border-radius: 16px; padding: 20px; color: white; 
-                        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
-                        display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px; line-height: 1;">🤖</div>
-                <div style="flex: 1;">
-                    <div style="font-size: 1.3em; font-weight: 700; margin-bottom: 4px;">
-                        Claude AI is Active!
-                    </div>
-                    <div style="opacity: 0.95; font-size: 0.95em;">
-                        Powered by Anthropic's most advanced AI • Smart categorization • Expert financial insights
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 0.85em; opacity: 0.9;">Model:</div>
-                    <div style="font-weight: 600;">${aiStatus.models.length > 0 ? aiStatus.models[0] : 'Claude 3.5'}</div>
-                </div>
-            </div>
-        `;
-        
-        // Show quick actions
-        const quickActions = document.getElementById('aiQuickActions');
-        if (quickActions) quickActions.style.display = 'block';
-    } else {
-        banner.innerHTML = `
-            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
-                        border-radius: 16px; padding: 20px; 
-                        border: 2px solid #f59e0b;
-                        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-                        display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px; line-height: 1;">⚠️</div>
-                <div style="flex: 1;">
-                    <div style="font-size: 1.2em; font-weight: 700; color: #92400e; margin-bottom: 4px;">
-                        Claude AI Not Configured
-                    </div>
-                    <div style="color: #78350f; font-size: 0.95em; line-height: 1.5;">
-                        Add your Claude API key to unlock AI-powered features:<br>
-                        <strong>Get API key at:</strong> 
-                        <a href="https://console.anthropic.com/" target="_blank" 
-                           style="color: #4f46e5; text-decoration: underline;">console.anthropic.com</a>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-}
+// Update AI Banner - removed for cleaner interface
 
-// Get financial tips from Claude AI
+// Get financial tips from AI
 async function getFinancialTips() {
     try {
         const response = await fetch(`${API_BASE_URL}/ai/tips`);
@@ -595,9 +513,9 @@ async function getFinancialTips() {
         const data = await response.json();
         
         if (data.success) {
-            alert('💡 Financial Tips from Claude AI:\n\n' + data.tips);
+            alert('💡 Financial Tips from AI:\n\n' + data.tips);
         } else {
-            alert('⚠️ ' + data.message);
+            alert('⚠️ Unable to generate tips at this time');
         }
     } catch (error) {
         console.error('Error getting tips:', error);
@@ -605,7 +523,7 @@ async function getFinancialTips() {
     }
 }
 
-// Get spending insight from Claude AI
+// Get spending insight from AI
 async function getSpendingInsight() {
     const period = window.currentPeriod || 'monthly';
     
@@ -617,8 +535,7 @@ async function getSpendingInsight() {
         
         if (data.success) {
             alert(`📊 Deep Insight for ${data.period}:\n\n${data.insight}\n\n` +
-                  `Total Expenses: $${data.totalExpenses.toFixed(2)}\n` +
-                  `AI Analysis: ${data.aiPowered ? 'Claude AI' : 'Fallback'}`);
+                  `Total Expenses: $${data.totalExpenses.toFixed(2)}`);
         } else {
             alert('⚠️ Failed to generate insight');
         }

@@ -222,8 +222,6 @@ public class AIRecommendationEngine {
             recommendations.add("💡 Pro tip: Aim for the 50/30/20 rule - 50% needs, 30% wants, 20% savings.");
         }
 
-        recommendations.add("🤖 Note: AI recommendations are currently using fallback mode. Configure Claude API key for personalized AI insights!");
-
         return recommendations;
     }
 

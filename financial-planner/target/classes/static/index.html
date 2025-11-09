@@ -84,9 +84,6 @@
                 </button>
             </div>
 
-            <!-- AI Status Banner -->
-            <div id="aiStatusBanner" style="margin-bottom: 20px;"></div>
-
             <!-- Summary Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -152,26 +149,25 @@
                 <div class="content-card recommendations-card">
                     <div class="card-header">
                         <h3 class="card-title">
-                            🤖 Claude AI Recommendations
+                            AI Recommendations
                         </h3>
                         <div style="display: flex; gap: 8px; align-items: center;">
                             <span class="badge" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; font-weight: 600;">
-                                ⚡ Powered by Claude
+                                Powered by AI
                             </span>
-                            <span id="aiStatusBadge" class="badge badge-warning" style="display: none;">Checking...</span>
+                            <span id="aiStatusIndicator" style="font-size: 18px; opacity: 0.7;" title="AI Status">⏳</span>
                         </div>
                     </div>
                     <div class="card-body">
                         <div id="recommendations" class="recommendations-list">
                             <div class="loading-state">
                                 <div class="spinner"></div>
-                                <p>Claude AI is analyzing your spending patterns...</p>
+                                <p>AI is analyzing your spending patterns...</p>
                             </div>
                         </div>
-                        <div id="aiStatusMessage" style="margin-top: 12px; display: none;"></div>
                         
                         <!-- Quick AI Actions -->
-                        <div id="aiQuickActions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: none;">
+                        <div id="aiQuickActions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                 <button onclick="getFinancialTips()" class="btn btn-secondary btn-sm" style="background: #f3f4f6; color: #374151;">
                                     💡 Get AI Tips
