@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hack-Cash Financial Planner</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <h1>💰 Hack-Cash Financial Planner</h1>
+                <p class="subtitle">AI-Powered Spending Analysis & Recommendations</p>
+            </div>
+            <div class="period-selector">
+                <select id="period" onchange="loadDashboard()">
+                    <option value="1-week">Last Week</option>
+                    <option value="1-month" selected>Last Month</option>
+                    <option value="3-month">Last 3 Months</option>
+                    <option value="6-month">Last 6 Months</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <!-- Summary Cards -->
+            <section class="summary-cards">
+                <div class="card">
+                    <div class="card-icon">💸</div>
+                    <div class="card-content">
+                        <h3>Total Expenses</h3>
+                        <p class="card-value" id="totalExpenses">$0.00</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💰</div>
+                    <div class="card-content">
+                        <h3>Total Income</h3>
+                        <p class="card-value" id="totalIncome">$0.00</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-content">
+                        <h3>Savings Rate</h3>
+                        <p class="card-value" id="savingsRate">0%</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📈</div>
+                    <div class="card-content">
+                        <h3>Trend</h3>
+                        <p class="card-value" id="trend">0%</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-container">
+                    <h2>Spending by Category</h2>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h2>Category Breakdown</h2>
+                    <canvas id="barChart"></canvas>
+                </div>
+            </section>
+
+            <!-- AI Recommendations -->
+            <section class="recommendations-section">
+                <div class="section-header">
+                    <h2>🤖 AI-Powered Recommendations</h2>
+                    <span class="ai-badge">Powered by OpenAI GPT-4</span>
+                </div>
+                <div id="recommendations" class="recommendations-grid">
+                    <!-- Recommendations will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Category Table -->
+            <section class="table-section">
+                <h2>Category Details</h2>
+                <table id="categoryTable">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Total Spent</th>
+                            <th>Transactions</th>
+                            <th>% of Budget</th>
+                            <th>vs Recommended</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                        <!-- Category rows will be loaded here -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Recent Transactions -->
+            <section class="transactions-section">
+                <h2>Recent Transactions</h2>
+                <div id="recentTransactions" class="transactions-list">
+                    <!-- Recent transactions will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Add Transaction Form -->
+            <section class="add-transaction-section">
+                <h2>Add New Transaction</h2>
+                <form id="transactionForm">
+                    <div class="form-group">
+                        <label for="merchantName">Merchant Name *</label>
+                        <input type="text" id="merchantName" required placeholder="e.g., Starbucks">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" placeholder="e.g., Morning coffee">
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Amount *</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionDate">Date (Optional)</label>
+                        <input type="datetime-local" id="transactionDate">
+                    </div>
+                    <button type="submit" class="btn-primary">Add Transaction (AI Auto-Categorize)</button>
+                </form>
+            </section>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading AI insights...</p>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
